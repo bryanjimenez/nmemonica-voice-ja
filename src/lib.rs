@@ -35,6 +35,23 @@ pub fn example_buffer() -> Vec<u8> {
     buff_wav(&wave)
 }
 
+#[wasm_bindgen(js_name = "testVoice")]
+pub fn test_voice(query: &str) -> Vec<u8> {
+    // let mut wave:Vec<i16> =vec![];
+    let voice = "";
+    let wave = match build_speech(query, None, voice) {
+        Ok(x) => x,
+        Err(_e) => {
+            log("Failed to build speech {:?}");
+            return vec![];
+        }
+    };
+
+    let speech = MySound::new(wave);
+
+    buff_wav(&speech.wave)
+}
+
 #[wasm_bindgen(start)]
 fn run() {
     // log(&String::from("Hello from 'run()'!"));

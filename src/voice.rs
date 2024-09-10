@@ -5,7 +5,9 @@ use std::{
     time::Duration,
 };
 
-use jpreprocess::{JPreprocess, JPreprocessConfig};
+use jpreprocess::{
+    kind::JPreprocessDictionaryKind, JPreprocess, JPreprocessConfig, SystemDictionaryConfig,
+};
 use rodio::{OutputStream, Source};
 
 pub struct MySound {
@@ -89,7 +91,7 @@ fn main() {
     // let dictionary = "dictionary/open_jtalk_dic_utf_8-1.11";
     let dictionary = "dictionary/min-dict";
 
-    let wave = match build_speech(word.as_str(), dictionary, voice) {
+    let wave = match build_speech(word.as_str(), None /*Some(dictionary)*/, voice) {
         Ok(x) => x,
         Err(e) => panic!("Failed to build speech {:?}", e),
     };
@@ -134,19 +136,17 @@ fn directory(dir: &Path) -> Result<(), Box<dyn std::error::Error>> {
 
 pub fn build_speech(
     text: &str,
-    dictionary: &str,
+    dictionary: Option<&str>,
     voice: &str,
 ) -> Result<Vec<f64>, Box<dyn std::error::Error>> {
     let config = JPreprocessConfig {
-        dictionary: jpreprocess::SystemDictionaryConfig::File(PathBuf::from(dictionary)),
+        // dictionary: jpreprocess::SystemDictionaryConfig::File(PathBuf::from(dictionary)),
+        dictionary: match dictionary {
+            Some(path) => jpreprocess::SystemDictionaryConfig::File(PathBuf::from(path)),
+            None => SystemDictionaryConfig::Bundled(JPreprocessDictionaryKind::NaistJdic),
+        },
         user_dictionary: None,
     };
-
-    // let mydir = ".";
-    // let dir = Path::new(mydir);
-    // eprintln!("{}",mydir);
-
-    // directory(dir);
 
     let jpreprocess = JPreprocess::from_config(config)?;
 
@@ -234,6 +234,7 @@ pub fn buff_wav(wave: &[i16]) -> Vec<u8> {
     // let mut header_block: Vec<u8> = header_block.into_iter().flatten().map(|h| *h).collect();
     // let mut wav_buffer: Vec<u8> = header_block.into_iter().flat_map(|f| **f).collect();
     let mut wav_buffer: Vec<u8> = header_block.into_iter().flatten().copied().collect();
+
     let mut sampled_data: Vec<u8> = sampled_data.iter().flat_map(|x| x.to_le_bytes()).collect();
 
     wav_buffer.append(&mut sampled_data);
