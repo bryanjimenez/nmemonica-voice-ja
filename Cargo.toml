@@ -23,7 +23,7 @@ console_error_panic_hook = { version = "0.1.7", optional = true }
 wee_alloc = { version = "0.4.5", optional = true }
 cfg-if = "1.0.0"
 
-jbonsai = { version = "0.1.1", features = ["htsvoice"] }
+jbonsai = { path = "./crates/jbonsai", version = "0.1.1", features = ["htsvoice"] }
 jpreprocess = { version = "0.9.1", features = ["naist-jdic"] }
 rodio = "0.19.0"
 
@@ -36,4 +36,4 @@ opt-level = "s"
 
 
 [lints.clippy]
-unwrap_used = "deny"
+unwrap_used = "warn"

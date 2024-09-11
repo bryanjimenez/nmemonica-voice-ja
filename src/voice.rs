@@ -1,14 +1,12 @@
-use std::{
-    fs::{self, File},
-    io::{IoSlice, Write},
-    path::{Path, PathBuf},
-    time::Duration,
-};
+use std::{path::PathBuf, sync::Arc, time::Duration};
 
+use jbonsai::{model::VoiceSet, Condition};
 use jpreprocess::{
     kind::JPreprocessDictionaryKind, JPreprocess, JPreprocessConfig, SystemDictionaryConfig,
 };
-use rodio::{OutputStream, Source};
+use rodio::Source;
+
+use crate::voice_bundled::use_bundled_voice;
 
 pub struct MySound {
     pub wave: Vec<i16>,
@@ -76,73 +74,17 @@ impl Source for MySound {
     }
 }
 
-fn main() {
-    let word: Vec<String> = std::env::args().collect();
-
-    let word = match word.split_first() {
-        Some((_, rest)) => rest.join(" "),
-        _ => return,
-    };
-
-    println!("Heard: {}", word);
-
-    // let voice = "models/hts_voice_nitech_jp_atr503_m001-1.05/nitech_jp_atr503_m001.htsvoice";
-    let voice = "models/htsvoice-tohoku-f01/tohoku-f01-happy.htsvoice";
-    // let dictionary = "dictionary/open_jtalk_dic_utf_8-1.11";
-    let dictionary = "dictionary/min-dict";
-
-    let wave = match build_speech(word.as_str(), None /*Some(dictionary)*/, voice) {
-        Ok(x) => x,
-        Err(e) => panic!("Failed to build speech {:?}", e),
-    };
-
-    let speech = MySound::new(wave);
-
-    println!("Total samples: {}", speech.len());
-
-    let buff = buff_wav(&speech.wave);
-
-    match write_wav("file.wav", &buff) {
-        Ok(_) => (),
-        Err(e) => panic!("Failed to write wav {:?}", e),
-    }
-
-    match play_speech(speech) {
-        Ok(_) => (),
-        Err(e) => panic!("Failed to play wav {:?}", e),
-    };
-}
-
-/**
- * Print a directory and file structure
- */
-fn directory(dir: &Path) -> Result<(), Box<dyn std::error::Error>> {
-    if dir.is_dir() {
-        for entry in fs::read_dir(dir)? {
-            let entry = entry?;
-            let path = entry.path();
-            if path.is_dir() {
-                eprintln!("{:?}", path);
-                let _ = directory(&path);
-            } else {
-                eprintln!("\tfile {:?}", entry.path());
-            }
-        }
-    } else {
-        eprintln!("wasn't a dir..");
-    }
-    Ok(())
-}
-
 pub fn build_speech(
     text: &str,
-    dictionary: Option<&str>,
-    voice: &str,
+    dictionary_path: Option<&str>,
+    voice_path: Option<&str>,
 ) -> Result<Vec<f64>, Box<dyn std::error::Error>> {
     let config = JPreprocessConfig {
         // dictionary: jpreprocess::SystemDictionaryConfig::File(PathBuf::from(dictionary)),
-        dictionary: match dictionary {
-            Some(path) => jpreprocess::SystemDictionaryConfig::File(PathBuf::from(path)),
+        dictionary: match dictionary_path {
+            Some(dictionary_path) => {
+                jpreprocess::SystemDictionaryConfig::File(PathBuf::from(dictionary_path))
+            }
             None => SystemDictionaryConfig::Bundled(JPreprocessDictionaryKind::NaistJdic),
         },
         user_dictionary: None,
@@ -154,13 +96,30 @@ pub fn build_speech(
 
     let labels: Vec<String> = fc.into_iter().map(|x| x.to_string()).collect();
 
-    let engine = match jbonsai::Engine::load(&[
-        // The path to the `.htsvoice` model file.
-        // Currently only Japanese models are supported (due to the limitation of jlabel).
-        voice,
-    ]) {
-        Ok(e) => e,
-        _ => return Err("Failed to load voice into engine".into()),
+    let engine = match voice_path {
+        Some(voice_path) => match jbonsai::Engine::load(&[
+            // The path to the `.htsvoice` model file.
+            // Currently only Japanese models are supported (due to the limitation of jlabel).
+            voice_path,
+        ]) {
+            Ok(e) => e,
+            _ => return Err("Failed to load provided voice into engine".into()),
+        },
+        None => {
+            let bundled_voice = match use_bundled_voice() {
+                Ok(v) => vec![Arc::new(v)],
+                Err(e) => {
+                    let err = format!("Failed to load bundled voice into engine {:?}", e);
+                    return Err(err.into());
+                }
+            };
+
+            let voiceset = VoiceSet::new(bundled_voice)?;
+            let mut condition = Condition::default();
+            condition.load_model(&voiceset)?;
+
+            jbonsai::Engine::new(voiceset, condition)
+        }
     };
 
     let speech = match engine.synthesize(labels) {
@@ -169,18 +128,6 @@ pub fn build_speech(
     };
 
     Ok(speech)
-}
-
-pub fn play_speech(speech: MySound) -> Result<(), Box<dyn std::error::Error>> {
-    // Get an output stream handle to the default physical sound device
-    let (_stream, stream_handle) = OutputStream::try_default()?;
-
-    let sink = rodio::Sink::try_new(&stream_handle)?;
-
-    sink.append(speech);
-    sink.sleep_until_end();
-
-    Ok(())
 }
 
 pub fn buff_wav(wave: &[i16]) -> Vec<u8> {
@@ -239,28 +186,4 @@ pub fn buff_wav(wave: &[i16]) -> Vec<u8> {
 
     wav_buffer.append(&mut sampled_data);
     wav_buffer
-}
-
-pub fn write_wav(file_name: &str, buff: &Vec<u8>) -> Result<(), Box<dyn std::error::Error>> {
-    let p = Path::new(file_name);
-    let mut f = match File::create(p) {
-        Ok(p) => p,
-        _ => {
-            return Err("Failed to create file".into());
-        }
-    };
-
-    let buff_slice = IoSlice::new(buff.as_slice());
-
-    match f.write_vectored(&[buff_slice]) {
-        Ok(_) => (),
-        _ => {
-            return Err("Failed to write header".into());
-        }
-    }
-
-    match f.flush() {
-        Ok(_) => Ok(()),
-        _ => Err("failed to flush".into()),
-    }
 }
