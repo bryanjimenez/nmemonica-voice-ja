@@ -14,20 +14,18 @@ extern "C" {
 }
 
 #[wasm_bindgen(js_name = "buildSpeech")]
-pub fn build_speech_fn(query: &str, voice_model: &[u8]) -> Vec<u8> {
+pub fn build_speech_fn(query: &str, voice_model: &[u8]) -> Result<Vec<u8>, JsValue> {
     let wave = match build_speech(query, None, voice_model) {
         Ok(x) => x,
         Err(e) => {
-            // TODO: is there a try catch alternative
-            let err = format!("Failed to build speech {:?}", e);
-            log(err.as_str());
-            return vec![];
+            let err = format!("@nmemonica/voice-ja {:?}", e);
+            return Err(err.into());
         }
     };
 
     let speech = MySound::new(wave);
 
-    buff_wav(&speech.wave)
+    Ok(buff_wav(&speech.wave))
 }
 
 #[wasm_bindgen(start)]
