@@ -1,6 +1,7 @@
 mod utils;
 mod voice;
 
+use jbonsai::Condition;
 use utils::set_panic_hook;
 use voice::{buff_wav, build_speech, MySound};
 use wasm_bindgen::prelude::*;
@@ -13,9 +14,13 @@ extern "C" {
     fn log(s: &str);
 }
 
+#[allow(non_snake_case)]
 #[wasm_bindgen(js_name = "buildSpeech")]
 pub fn build_speech_fn(query: &str, voice_model: &[u8]) -> Result<Vec<u8>, JsValue> {
-    let wave = match build_speech(query, None, voice_model) {
+    let mut condition = Condition::default();
+    condition.set_speed(0.85);
+
+    let wave = match build_speech(query, None, voice_model, Some(condition)) {
         Ok(x) => x,
         Err(e) => {
             let err = format!("@nmemonica/voice-ja {:?}", e);
