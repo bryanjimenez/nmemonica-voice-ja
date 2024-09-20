@@ -179,3 +179,30 @@ pub fn buff_wav(wave: &[i16]) -> Vec<u8> {
     wav_buffer.append(&mut sampled_data);
     wav_buffer
 }
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use std::fs;
+
+    const DEFAULT_VOICE:&str = "./models/hts_voice_nitech_jp_atr503_m001-1.05/nitech_jp_atr503_m001.htsvoice";
+
+    #[test]
+    fn build_speech_fn() {
+        let voice_model =
+            fs::read(DEFAULT_VOICE).unwrap();
+        let voice_model = voice_model.as_slice();
+        let query = "テスト";
+        let wave = build_speech(query, None, voice_model, None).unwrap();
+
+        assert_eq!(wave.len(), 62640);
+    }
+
+    #[test]
+    fn buff_wav_fn() {
+        let buf = [];
+        let wav = buff_wav(&buf);
+
+        assert_eq!(wav.len(), 44);
+    }
+}
