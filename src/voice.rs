@@ -79,6 +79,7 @@ pub fn build_speech(
     text: &str,
     dictionary_path: Option<&str>,
     voice_model: &[u8],
+    condition: Option<Condition>,
 ) -> Result<Vec<f64>, Box<dyn std::error::Error>> {
     let config = JPreprocessConfig {
         // dictionary: jpreprocess::SystemDictionaryConfig::File(PathBuf::from(dictionary)),
@@ -107,7 +108,7 @@ pub fn build_speech(
         };
 
         let voiceset = VoiceSet::new(bundled_voice)?;
-        let mut condition = Condition::default();
+        let mut condition = condition.unwrap_or_default();
         condition.load_model(&voiceset)?;
 
         jbonsai::Engine::new(voiceset, condition)
