@@ -172,12 +172,13 @@ pub fn buff_wav(wave: &[i16]) -> Vec<u8> {
 
     // let mut header_block: Vec<u8> = header_block.into_iter().flatten().map(|h| *h).collect();
     // let mut wav_buffer: Vec<u8> = header_block.into_iter().flat_map(|f| **f).collect();
-    let mut wav_buffer: Vec<u8> = header_block.into_iter().flatten().copied().collect();
+    let header_block: Vec<u8> = header_block.into_iter().flatten().copied().collect();
 
-    let mut sampled_data: Vec<u8> = sampled_data.iter().flat_map(|x| x.to_le_bytes()).collect();
+    let sampled_data: Vec<u8> = sampled_data.iter().flat_map(|x| x.to_le_bytes()).collect();
 
-    wav_buffer.append(&mut sampled_data);
-    wav_buffer
+    // wav_buffer.append(&mut sampled_data);
+    // wav_buffer
+    [header_block, sampled_data].concat()
 }
 
 #[cfg(test)]
