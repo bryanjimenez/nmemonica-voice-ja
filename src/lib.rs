@@ -1,8 +1,6 @@
 mod utils;
 mod voice;
-mod voice_bundled;
 
-use cfg_if::cfg_if;
 use utils::set_panic_hook;
 use voice::{buff_wav, build_speech, MySound};
 use wasm_bindgen::prelude::*;
@@ -16,8 +14,8 @@ extern "C" {
 }
 
 #[wasm_bindgen(js_name = "buildSpeech")]
-pub fn build_speech_fn(query: &str) -> Vec<u8> {
-    let wave = match build_speech(query, None, None) {
+pub fn build_speech_fn(query: &str, voice_model: &[u8]) -> Vec<u8> {
+    let wave = match build_speech(query, None, voice_model) {
         Ok(x) => x,
         Err(e) => {
             // TODO: is there a try catch alternative
