@@ -1,12 +1,13 @@
 use std::{path::PathBuf, sync::Arc, time::Duration};
 
-use jbonsai::{model::VoiceSet, Condition};
+use jbonsai::{
+    model::{parser::parse_htsvoice, VoiceSet},
+    Condition,
+};
 use jpreprocess::{
     kind::JPreprocessDictionaryKind, JPreprocess, JPreprocessConfig, SystemDictionaryConfig,
 };
 use rodio::Source;
-
-use crate::voice_bundled::use_bundled_voice;
 
 pub struct MySound {
     pub wave: Vec<i16>,
@@ -77,7 +78,7 @@ impl Source for MySound {
 pub fn build_speech(
     text: &str,
     dictionary_path: Option<&str>,
-    voice_path: Option<&str>,
+    voice_model: &[u8],
 ) -> Result<Vec<f64>, Box<dyn std::error::Error>> {
     let config = JPreprocessConfig {
         // dictionary: jpreprocess::SystemDictionaryConfig::File(PathBuf::from(dictionary)),
@@ -96,30 +97,20 @@ pub fn build_speech(
 
     let labels: Vec<String> = fc.into_iter().map(|x| x.to_string()).collect();
 
-    let engine = match voice_path {
-        Some(voice_path) => match jbonsai::Engine::load(&[
-            // The path to the `.htsvoice` model file.
-            // Currently only Japanese models are supported (due to the limitation of jlabel).
-            voice_path,
-        ]) {
-            Ok(e) => e,
-            _ => return Err("Failed to load provided voice into engine".into()),
-        },
-        None => {
-            let bundled_voice = match use_bundled_voice() {
-                Ok(v) => vec![Arc::new(v)],
-                Err(e) => {
-                    let err = format!("Failed to load bundled voice into engine {:?}", e);
-                    return Err(err.into());
-                }
-            };
+    let engine = {
+        let bundled_voice = match parse_htsvoice(voice_model) {
+            Ok(v) => vec![Arc::new(v)],
+            Err(e) => {
+                let err = format!("Failed to load bundled voice into engine {:?}", e);
+                return Err(err.into());
+            }
+        };
 
-            let voiceset = VoiceSet::new(bundled_voice)?;
-            let mut condition = Condition::default();
-            condition.load_model(&voiceset)?;
+        let voiceset = VoiceSet::new(bundled_voice)?;
+        let mut condition = Condition::default();
+        condition.load_model(&voiceset)?;
 
-            jbonsai::Engine::new(voiceset, condition)
-        }
+        jbonsai::Engine::new(voiceset, condition)
     };
 
     let speech = match engine.synthesize(labels) {
