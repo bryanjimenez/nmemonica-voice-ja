@@ -5,8 +5,10 @@ mod voice_sound;
 use jbonsai::Condition;
 use lib_utils::set_panic_hook;
 use speech::build_speech;
-use voice_sound::{trim::trim_wave, VoiceWave};
+use voice_sound::VoiceWaveBuilder;
 use wasm_bindgen::prelude::*;
+
+const PACKAGE_NAME: &str = "@nmemonica/voice-ja";
 
 #[wasm_bindgen]
 extern "C" {
@@ -25,14 +27,12 @@ pub fn build_speech_fn(query: &str, voice_model: &[u8]) -> Result<Vec<u8>, JsVal
     let wave = match build_speech(query, None, voice_model, Some(condition)) {
         Ok(x) => x,
         Err(e) => {
-            let err = format!("@nmemonica/voice-ja {:?}", e);
+            let err = format!("{PACKAGE_NAME} {:?}", e);
             return Err(err.into());
         }
     };
 
-    let wave = trim_wave(wave, 500.0, Some(4000));
-
-    let speech = VoiceWave::new(wave);
+    let speech = VoiceWaveBuilder::new(wave).trim(500.0, Some(4000)).build();
 
     Ok(speech.to_wav_buffer())
 }

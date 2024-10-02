@@ -1,7 +1,9 @@
 pub mod trim;
+
 use std::time::Duration;
 
 use rodio::Source;
+use trim::trim_wave;
 
 pub struct VoiceWave {
     pub wave: Vec<i16>,
@@ -11,24 +13,9 @@ pub struct VoiceWave {
 }
 
 impl VoiceWave {
-    pub fn new(wave: Vec<f64>) -> VoiceWave {
-        let len = wave.len();
-
-        let wave: Vec<i16> = wave
-            .into_iter()
-            .map(|p| {
-                let clamped = p.min(i16::MAX as f64).max(i16::MIN as f64);
-
-                clamped as i16
-            })
-            .collect();
-
-        VoiceWave {
-            wave,
-            len,
-
-            index: 0,
-        }
+    #[allow(dead_code)]
+    pub fn builder() -> VoiceWaveBuilder {
+        VoiceWaveBuilder::default()
     }
 
     // get the sample count of the signal
@@ -130,14 +117,67 @@ impl Source for VoiceWave {
     }
 }
 
+#[derive(Default)]
+pub struct VoiceWaveBuilder {
+    wave: Vec<f64>,
+    pub len: usize,
+}
+
+impl VoiceWaveBuilder {
+    pub fn new(wave: Vec<f64>) -> VoiceWaveBuilder {
+        let len = wave.len();
+
+        VoiceWaveBuilder { wave, len }
+    }
+
+    #[allow(dead_code)]
+    pub fn wave(mut self, wave: Vec<f64>) -> VoiceWaveBuilder {
+        self.wave = wave;
+        self
+    }
+
+    pub fn trim(mut self, cutoff: f64, end_padding: Option<usize>) -> VoiceWaveBuilder {
+        let wave = trim_wave(self.wave, cutoff, end_padding);
+
+        self.wave = wave;
+        self
+    }
+
+    pub fn build(self) -> VoiceWave {
+        let wave: Vec<i16> = self
+            .wave
+            .into_iter()
+            .map(|p| {
+                let clamped = p.min(i16::MAX as f64).max(i16::MIN as f64);
+
+                clamped as i16
+            })
+            .collect();
+
+        VoiceWave {
+            wave,
+            len: self.len,
+            index: 0,
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
     fn to_wav_buffer() {
-        let wav = VoiceWave::new([].to_vec()).to_wav_buffer();
+        let wav = VoiceWave::builder().build().to_wav_buffer();
+        assert_eq!(wav.len(), 44);
 
+        let wav = VoiceWaveBuilder::default().build().to_wav_buffer();
+        assert_eq!(wav.len(), 44);
+
+        let wav = VoiceWaveBuilder::default()
+            .wave([].to_vec())
+            .build()
+            .to_wav_buffer();
         assert_eq!(wav.len(), 44);
     }
 }
