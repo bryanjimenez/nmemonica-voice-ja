@@ -1,9 +1,11 @@
-mod utils;
-mod voice;
+mod lib_utils;
+mod speech;
+mod voice_sound;
 
 use jbonsai::Condition;
-use utils::set_panic_hook;
-use voice::{buff_wav, build_speech, MySound};
+use lib_utils::set_panic_hook;
+use speech::build_speech;
+use voice_sound::{trim::trim_wave, VoiceWave};
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
@@ -28,9 +30,11 @@ pub fn build_speech_fn(query: &str, voice_model: &[u8]) -> Result<Vec<u8>, JsVal
         }
     };
 
-    let speech = MySound::new(wave);
+    let wave = trim_wave(wave, 500.0, Some(4000));
 
-    Ok(buff_wav(&speech.wave))
+    let speech = VoiceWave::new(wave);
+
+    Ok(speech.to_wav_buffer())
 }
 
 #[wasm_bindgen(start)]
