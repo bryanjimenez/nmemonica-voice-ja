@@ -7,7 +7,8 @@ use trim::trim_wave;
 
 pub struct VoiceWave {
     pub wave: Vec<i16>,
-    pub len: usize,
+    // Count of samples
+    len: usize,
 
     index: usize,
 }
@@ -18,34 +19,44 @@ impl VoiceWave {
         VoiceWaveBuilder::default()
     }
 
-    // get the sample count of the signal
-    pub fn samples(&self) -> usize {
+    /// Count of the samples
+    pub fn sample_length(&self) -> usize {
         self.len
     }
 
-    // convert signal into a `wav` file buffer
+    /// How many `bytes` in a sample element
+    pub fn bytes_per_sample(&self) -> usize {
+        std::mem::size_of::<i16>()
+    }
+
+    /// Converts signal into a **wav** file buffer
     pub fn to_wav_buffer(&self) -> Vec<u8> {
         let header_size = 44;
         // each sample is i16, file writes are in u8. i16 = [u8,u8]
-        let data_size = self.samples() * 2;
+        let data_size = u32::try_from(self.sample_length() * self.bytes_per_sample())
+            .expect("Data size exceeds max for .wav");
         let file_size = header_size + data_size - 8;
 
-        let fs = file_size.to_le_bytes();
-        let ds = data_size.to_le_bytes();
+        let sample_el_size_byte = u16::try_from(self.bytes_per_sample())
+            .expect("Expected sample element byte size to be small");
+        let bit_per_sample = 8 * sample_el_size_byte;
 
-        let file_type_bloc_id: &[u8; 4] = b"RIFF"; //               Identifier « RIFF »  (0x52, 0x49, 0x46, 0x46)
-        let file_size: &[u8; 4] = &[fs[0], fs[1], fs[2], fs[3]]; // Overall file size minus 8 bytes
-        let file_format_id: &[u8; 4] = b"WAVE"; //                  Format = « WAVE »  (0x57, 0x41, 0x56, 0x45)
-        let format_bloc_id: &[u8; 4] = b"fmt "; //                  Identifier « fmt␣ »  (0x66, 0x6D, 0x74, 0x20)
-        let bloc_size: &[u8; 4] = b"\x10\x00\x00\x00"; //           Chunk size minus 8 bytes, which is 16 bytes here  (0x10)
-        let audio_format: &[u8; 2] = b"\x01\x00"; //                Audio format (1: PCM integer, 3: IEEE 754 float)
-        let nbr_channels: &[u8; 2] = b"\x01\x00"; //                Number of channels
-        let frequency: &[u8; 4] = b"\x80\xBB\x00\x00"; //           Sample rate (in hertz) (=48000) (x0000bb80) (x80bb0000)
-        let byte_per_sec: &[u8; 4] = b"\x00\x77\x01\x00"; //        Number of bytes to read per second (Frequency * BytePerBloc).(9600!) (6000) (x00001770) (x70170000)
-        let byte_per_block: &[u8; 2] = b"\x02\x00"; //              Number of bytes per block (NbrChannels * BitsPerSample / 8). (1/8)
-        let bits_per_sample: &[u8; 2] = b"\x10\x00"; //             Number of bits per sample (=16)
-        let data_bloc_id: &[u8; 4] = b"data"; //                    Identifier « data »  (0x64, 0x61, 0x74, 0x61)
-        let data_size: &[u8; 4] = &[ds[0], ds[1], ds[2], ds[3]]; // SampledData size
+        let byte_per_block = self.channels() * sample_el_size_byte;
+        let byte_per_sec = self.sample_rate() * u32::from(byte_per_block);
+
+        let file_type_bloc_id: &[u8; 4] = b"RIFF"; //                   Identifier « RIFF »  (0x52, 0x49, 0x46, 0x46)
+        let file_size: &[u8; 4] = &file_size.to_le_bytes(); //          Overall file size minus 8 bytes
+        let file_format_id: &[u8; 4] = b"WAVE"; //                      Format = « WAVE »  (0x57, 0x41, 0x56, 0x45)
+        let format_bloc_id: &[u8; 4] = b"fmt "; //                      Identifier « fmt␣ »  (0x66, 0x6D, 0x74, 0x20)
+        let bloc_size: &[u8; 4] = &16_u32.to_le_bytes(); //             Chunk size minus 8 bytes, which is 16 bytes here  (0x10) b"\x10\x00\x00\x00"
+        let audio_format: &[u8; 2] = &1_u16.to_le_bytes(); //           Audio format (1: PCM integer, 3: IEEE 754 float)
+        let nbr_channels: &[u8; 2] = &self.channels().to_le_bytes(); // Number of channels
+        let frequency: &[u8; 4] = &self.sample_rate().to_le_bytes(); // Sample rate (in hertz) (=48000) (x0000bb80) (x80bb0000) b"\x80\xBB\x00\x00"
+        let byte_per_sec: &[u8; 4] = &byte_per_sec.to_le_bytes(); //    Number of bytes to read per second (Frequency * BytePerBloc).(96000) (x00017700) (x00770100) b"\x00\x77\x01\x00"
+        let byte_per_block: &[u8; 2] = &byte_per_block.to_le_bytes(); //Number of bytes per block (NbrChannels * BitsPerSample / 8). ((1*16)/8)=2 b"\x02\x00"
+        let bits_per_sample: &[u8; 2] = &bit_per_sample.to_le_bytes(); //Number of bits per sample (=16) b"\x10\x00"
+        let data_bloc_id: &[u8; 4] = b"data"; //                        Identifier « data »  (0x64, 0x61, 0x74, 0x61)
+        let data_size: &[u8; 4] = &data_size.to_le_bytes(); //          SampledData size
         let sampled_data = &self.wave;
 
         let header_block = [
@@ -104,12 +115,13 @@ impl Source for VoiceWave {
     fn channels(&self) -> u16 {
         1
     }
+    /// Frequency
     fn sample_rate(&self) -> u32 {
         48000
     }
 
     fn current_frame_len(&self) -> Option<usize> {
-        Some(self.len - self.index)
+        Some(self.len - (self.index + 1))
     }
 
     fn total_duration(&self) -> Option<Duration> {
@@ -120,13 +132,13 @@ impl Source for VoiceWave {
 #[derive(Default)]
 pub struct VoiceWaveBuilder {
     wave: Vec<f64>,
-    pub len: usize,
+
+    len: usize,
 }
 
 impl VoiceWaveBuilder {
     pub fn new(wave: Vec<f64>) -> VoiceWaveBuilder {
         let len = wave.len();
-
         VoiceWaveBuilder { wave, len }
     }
 
