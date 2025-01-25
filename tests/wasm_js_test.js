@@ -12,19 +12,19 @@ describe("@nmemonica/voice-ja", function () {
 
     describe("buildSpeech throws", function () {
         it("missing query", function () {
-            const result = () => {buildSpeech()};
+            const result = () => {buildSpeech("", 0)};
             assert.throws(result,"query is a required parameter")
         });
 
         it("missing voice_model", function () {
-            const result = () => {buildSpeech("テスト")};
+            const result = () => {buildSpeech("", 0, "テスト")};
             assert.throws(result,"voice_model is a required parameter")
         });
     });
     
     describe("buildSpeech", function () {
         it("byteLength", function () {
-            const result = buildSpeech("テスト",voice_model);
+            const result = buildSpeech("", 0, "テスト", voice_model);
             // console.log(JSON.stringify({byteLength:result.byteLength}))
             
             assert.equal(result.byteLength,147404)

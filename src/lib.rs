@@ -18,9 +18,20 @@ extern "C" {
     fn log(s: &str);
 }
 
-#[allow(non_snake_case)]
+#[wasm_bindgen(getter_with_clone)]
+pub struct QueryResult {
+    pub uid: String,
+    pub index: Option<u32>,
+    pub buffer: Vec<u8>,
+}
+
 #[wasm_bindgen(js_name = "buildSpeech")]
-pub fn build_speech_fn(query: &str, voice_model: &[u8]) -> Result<Vec<u8>, JsValue> {
+pub fn build_speech_fn(
+    key: &str,
+    index: Option<u32>,
+    query: &str,
+    voice_model: &[u8],
+) -> Result<QueryResult, JsValue> {
     let mut condition = Condition::default();
     condition.set_speed(0.85);
 
@@ -34,7 +45,13 @@ pub fn build_speech_fn(query: &str, voice_model: &[u8]) -> Result<Vec<u8>, JsVal
 
     let speech = VoiceWaveBuilder::new(wave).trim(500.0, Some(4000)).build();
 
-    Ok(speech.to_wav_buffer())
+    let result = speech.to_wav_buffer();
+
+    Ok(QueryResult {
+        uid: key.to_string(),
+        index,
+        buffer: result,
+    })
 }
 
 #[wasm_bindgen(start)]
