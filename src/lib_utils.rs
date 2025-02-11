@@ -1,12 +1,3 @@
-use cfg_if::cfg_if;
-
-cfg_if! {
-    if #[cfg(feature = "wee_alloc")] {
-        #[global_allocator]
-        static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
-    }
-}
-
 #[allow(dead_code)]
 pub fn set_panic_hook() {
     // TODO: fork console_error_panic_hook to add PanicInfo module info
