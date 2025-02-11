@@ -1,8 +1,7 @@
 use std::{path::PathBuf, sync::Arc};
 
 use jbonsai::{
-    model::{parser::parse_htsvoice, VoiceSet},
-    Condition,
+    model::{load_htsvoice_bytes, VoiceSet}, Condition
 };
 use jpreprocess::{
     kind::JPreprocessDictionaryKind, JPreprocess, JPreprocessConfig, SystemDictionaryConfig,
@@ -32,7 +31,7 @@ pub fn build_speech(
     let labels: Vec<String> = fc.into_iter().map(|x| x.to_string()).collect();
 
     let engine = {
-        let loaded_voice = match parse_htsvoice(voice_model) {
+        let loaded_voice = match load_htsvoice_bytes(voice_model) {
             Ok(v) => vec![Arc::new(v)],
             Err(e) => {
                 let err = format!("Failed to load voice into engine {:?}", e);

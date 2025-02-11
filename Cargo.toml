@@ -23,8 +23,8 @@ console_error_panic_hook = { version = "0.1.7", optional = true }
 wee_alloc = { version = "0.4.5", optional = true }
 cfg-if = "1.0.0"
 
-jbonsai = { path = "./crates/jbonsai", version = "0.1.1", features = ["htsvoice"] }
-jpreprocess = { version = "0.9.1", features = ["naist-jdic"] }
+jbonsai = { version = "0.2", git = "https://github.com/bryanjimenez/jbonsai",  features = ["htsvoice"] }
+jpreprocess = { version = "0.10", features = ["naist-jdic"] }
 rodio = "0.19.0"
 
 [dev-dependencies]
