@@ -1,7 +1,8 @@
 use std::{path::PathBuf, sync::Arc};
 
 use jbonsai::{
-    model::{load_htsvoice_bytes, VoiceSet}, Condition
+    model::{load_htsvoice_bytes, VoiceSet},
+    Condition,
 };
 use jpreprocess::{
     kind::JPreprocessDictionaryKind, JPreprocess, JPreprocessConfig, SystemDictionaryConfig,

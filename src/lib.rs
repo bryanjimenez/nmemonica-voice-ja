@@ -25,17 +25,43 @@ pub struct QueryResult {
     pub buffer: Vec<u8>,
 }
 
+#[wasm_bindgen]
+#[allow(non_camel_case_types)]
+pub enum JapaneseVoice {
+    neutral = "neutral",
+    angry = "angry",
+    happy = "happy",
+    sad = "sad",
+    // deep = "deep",
+}
+
 #[wasm_bindgen(js_name = "buildSpeech")]
 pub fn build_speech_fn(
     key: &str,
     index: Option<u32>,
     query: &str,
-    voice_model: &[u8],
+    voice_model: Option<JapaneseVoice>,
 ) -> Result<QueryResult, JsValue> {
     let mut condition = Condition::default();
     condition.set_speed(0.85);
 
-    let wave = match build_speech(query, None, voice_model, Some(condition)) {
+    let angry = include_bytes!("../models/htsvoice-tohoku-f01/tohoku-f01-angry.htsvoice");
+    let sad = include_bytes!("../models/htsvoice-tohoku-f01/tohoku-f01-sad.htsvoice");
+    let happy = include_bytes!("../models/htsvoice-tohoku-f01/tohoku-f01-happy.htsvoice");
+    let neutral = include_bytes!("../models/htsvoice-tohoku-f01/tohoku-f01-neutral.htsvoice");
+    // let deep = include_bytes!("../models/hts_voice_nitech_jp_atr503_m001-1.05/nitech_jp_atr503_m001.htsvoice");
+
+    let voice_byte: &[u8] = match voice_model {
+        Some(JapaneseVoice::angry) => angry,
+        Some(JapaneseVoice::happy) => happy,
+        Some(JapaneseVoice::sad) => sad,
+        // Some(JapaneseVoice::deep) => deep,
+
+        // Some(JapaneseVoice::default)
+        _ => neutral,
+    };
+
+    let wave = match build_speech(query, None, voice_byte, Some(condition)) {
         Ok(x) => x,
         Err(e) => {
             let err = format!("{PACKAGE_NAME} {:?}", e);
@@ -56,6 +82,5 @@ pub fn build_speech_fn(
 
 #[wasm_bindgen(start)]
 fn run() {
-    // log(&String::from("Hello from 'run()'!"));
     set_panic_hook();
 }
