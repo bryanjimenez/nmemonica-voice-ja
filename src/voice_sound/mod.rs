@@ -1,7 +1,9 @@
 pub mod trim;
 
+#[cfg(not(all(target_arch = "wasm32", target_os = "unknown")))]
 use std::time::Duration;
 
+#[cfg(not(all(target_arch = "wasm32", target_os = "unknown")))]
 use rodio::Source;
 use trim::trim_wave;
 
@@ -27,6 +29,17 @@ impl VoiceWave {
     /// How many `bytes` in a sample element
     pub fn bytes_per_sample(&self) -> usize {
         std::mem::size_of::<i16>()
+    }
+
+    #[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
+    fn channels(&self) -> u16 {
+        1
+    }
+
+    /// Frequency
+    #[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
+    fn sample_rate(&self) -> u32 {
+        48000
     }
 
     /// Converts signal into a **wav** file buffer
@@ -109,6 +122,7 @@ impl Iterator for VoiceWave {
     }
 }
 
+#[cfg(not(all(target_arch = "wasm32", target_os = "unknown")))]
 impl Source for VoiceWave {
     // https://docs-rs-web-prod.infra.rust-lang.org/rodio/0.6.0/rodio/source/trait.Source.html
 
