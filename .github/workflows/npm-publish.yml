@@ -1,8 +1,5 @@
-name: Publish to npmjs
-on:
-  push:
-    tags:
-      - "v*"
+name: Publish to npmjs dry-run
+on: ["push"]
 
 jobs:
   build:
@@ -52,6 +49,6 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: pkg
-      - run: npm publish --provenance --access public
+      - run: npm --dry-run publish --provenance --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
