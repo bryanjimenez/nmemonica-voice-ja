@@ -1,10 +1,14 @@
-mod utils;
-mod voice;
+mod lib_utils;
+mod speech;
+mod voice_sound;
 
-use cfg_if::cfg_if;
-use utils::set_panic_hook;
-use voice::{buff_wav, build_speech, MySound};
+use jbonsai::Condition;
+use lib_utils::set_panic_hook;
+use speech::build_speech;
+use voice_sound::VoiceWaveBuilder;
 use wasm_bindgen::prelude::*;
+
+const PACKAGE_NAME: &str = "@nmemonica/voice-ja";
 
 #[wasm_bindgen]
 extern "C" {
@@ -14,29 +18,69 @@ extern "C" {
     fn log(s: &str);
 }
 
-#[wasm_bindgen(js_name = "exampleBuffer")]
-pub fn example_buffer() -> Vec<u8> {
-    // let wave: &[u8; 4] = b"\x80\xBB\x00\x00"; //      Sample rate (in hertz) (=48000) (x0000bb80) (x80bb0000)
-    let mut wave: Vec<i16> = vec![];
+#[wasm_bindgen(getter_with_clone)]
+pub struct QueryResult {
+    pub uid: String,
+    pub index: Option<u32>,
+    pub buffer: Vec<u8>,
+}
 
-    for _i in 0..1000 {
-        wave.push(2300)
-    }
+#[wasm_bindgen]
+#[allow(non_camel_case_types)]
+pub enum JapaneseVoice {
+    neutral = "neutral",
+    angry = "angry",
+    happy = "happy",
+    sad = "sad",
+    // deep = "deep",
+}
 
-    // let wave: Vec<i16> = wave
-    // .into_iter()
-    // .map(|p| {
-    //     let clamped = p.min(i16::MAX as f64).max(i16::MIN as f64);
+#[wasm_bindgen(js_name = "buildSpeech")]
+pub fn build_speech_fn(
+    key: &str,
+    index: Option<u32>,
+    query: &str,
+    voice_model: Option<JapaneseVoice>,
+) -> Result<QueryResult, JsValue> {
+    let mut condition = Condition::default();
+    condition.set_speed(0.85);
 
-    //     clamped as i16
-    // })
-    // .collect();
+    let angry = include_bytes!("../htsvoice/tohoku-f01/tohoku-f01-angry.htsvoice");
+    let sad = include_bytes!("../htsvoice/tohoku-f01/tohoku-f01-sad.htsvoice");
+    let happy = include_bytes!("../htsvoice/tohoku-f01/tohoku-f01-happy.htsvoice");
+    let neutral = include_bytes!("../htsvoice/tohoku-f01/tohoku-f01-neutral.htsvoice");
+    // let deep = include_bytes!("../htsvoice/hts_voice_nitech_jp_atr503_m001-1.05/nitech_jp_atr503_m001.htsvoice");
 
-    buff_wav(&wave)
+    let voice_byte: &[u8] = match voice_model {
+        Some(JapaneseVoice::angry) => angry,
+        Some(JapaneseVoice::happy) => happy,
+        Some(JapaneseVoice::sad) => sad,
+        // Some(JapaneseVoice::deep) => deep,
+
+        // Some(JapaneseVoice::default)
+        _ => neutral,
+    };
+
+    let wave = match build_speech(query, None, voice_byte, Some(condition)) {
+        Ok(x) => x,
+        Err(e) => {
+            let err = format!("{PACKAGE_NAME} {:?}", e);
+            return Err(err.into());
+        }
+    };
+
+    let speech = VoiceWaveBuilder::new(wave).trim(500.0, Some(4000)).build();
+
+    let result = speech.to_wav_buffer();
+
+    Ok(QueryResult {
+        uid: key.to_string(),
+        index,
+        buffer: result,
+    })
 }
 
 #[wasm_bindgen(start)]
 fn run() {
-    // log(&String::from("Hello from 'run()'!"));
     set_panic_hook();
 }

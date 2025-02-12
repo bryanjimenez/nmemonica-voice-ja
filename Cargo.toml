@@ -3,13 +3,14 @@ name = "voice-ja"
 description = "Japanese voice module for Nmemonica"
 version = "0.1.0"
 authors = ["bryanjimenez <bryanjimenez6@gmail.com>"]
+repository = "https://github.com/bryanjimenez/nmemonica-voice-ja"
+keywords = ["language", "japanese"]
 edition = "2021"
 
 [lib]
 crate-type = ["cdylib", "rlib"]
 
 [features]
-# wee_alloc
 default = ["console_error_panic_hook"]
 
 [dependencies]
@@ -20,12 +21,12 @@ wasm-bindgen = "0.2.92"
 # all the `std::fmt` and `std::panicking` infrastructure, so isn't great for
 # code size when deploying.
 console_error_panic_hook = { version = "0.1.7", optional = true }
-wee_alloc = { version = "0.4.5", optional = true }
-cfg-if = "1.0.0"
 
-jbonsai = "0.1.1"
-jpreprocess = "0.9.1"
-rodio = "0.19.0"
+jbonsai = { version = "0.2", git = "https://github.com/bryanjimenez/jbonsai",  features = ["htsvoice"] }
+jpreprocess = { version = "0.10", features = ["naist-jdic"] }
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+rodio = { version = "0.19" }
 
 [dev-dependencies]
 wasm-bindgen-test = "0.3.34"
@@ -36,4 +37,4 @@ opt-level = "s"
 
 
 [lints.clippy]
-unwrap_used = "deny"
+unwrap_used = "warn"
