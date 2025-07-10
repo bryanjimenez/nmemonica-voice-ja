@@ -5,7 +5,7 @@
       "bryanjimenez <bryanjimenez6@gmail.com>"
     ],
     "description": "Module Tester",
-    "version": "0.1.0",
+    "version": "0.0.0",
     "files": [
       "wasm_js_play.js",
       "wasm_js_test.js"
