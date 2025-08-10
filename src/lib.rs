@@ -27,6 +27,7 @@ pub struct QueryResult {
 
 #[wasm_bindgen]
 #[allow(non_camel_case_types)]
+#[derive(Debug)]
 pub enum JapaneseVoice {
     neutral = "neutral",
     angry = "angry",
@@ -45,26 +46,10 @@ pub fn build_speech_fn(
     let mut condition = Condition::default();
     condition.set_speed(0.85);
 
-    let angry = include_bytes!("../htsvoice/tohoku-f01/tohoku-f01-angry.htsvoice");
-    let sad = include_bytes!("../htsvoice/tohoku-f01/tohoku-f01-sad.htsvoice");
-    let happy = include_bytes!("../htsvoice/tohoku-f01/tohoku-f01-happy.htsvoice");
-    let neutral = include_bytes!("../htsvoice/tohoku-f01/tohoku-f01-neutral.htsvoice");
-    // let deep = include_bytes!("../htsvoice/hts_voice_nitech_jp_atr503_m001-1.05/nitech_jp_atr503_m001.htsvoice");
-
-    let voice_byte: &[u8] = match voice_model {
-        Some(JapaneseVoice::angry) => angry,
-        Some(JapaneseVoice::happy) => happy,
-        Some(JapaneseVoice::sad) => sad,
-        // Some(JapaneseVoice::deep) => deep,
-
-        // Some(JapaneseVoice::default)
-        _ => neutral,
-    };
-
-    let wave = match build_speech(query, None, voice_byte, Some(condition)) {
-        Ok(x) => x,
+    let wave = match build_speech(query, voice_model, None, Some(condition)) {
+        Ok(w) => w,
         Err(e) => {
-            let err = format!("{PACKAGE_NAME} {:?}", e);
+            let err = format!("{PACKAGE_NAME} {e:?}");
             return Err(err.into());
         }
     };

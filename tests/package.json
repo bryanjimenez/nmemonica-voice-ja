@@ -15,7 +15,7 @@
         "test":"mocha -n experimental-wasm-modules ./wasm_js_test.js"
     },
     "devDependencies": {
-        "@nmemonica/voice-ja": "file:../pkg/nmemonica-voice-ja-0.1.0.tgz",
+        "@nmemonica/voice-ja": "file:../pkg/nmemonica-voice-ja-0.1.1.tgz",
         "mocha":"latest"
     }
   }
