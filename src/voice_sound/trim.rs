@@ -1,8 +1,10 @@
-/// Trim wave start and end below threshold points using a cutoff
-pub fn trim_wave(wave: Vec<f64>, cutoff: f64, end_padding: Option<usize>) -> Vec<f64> {
-    // let before = wave.len();
-    // println!("samples: {}", before);
+/// Returns a trimmed wave that has a sub slice with start and endpoint above `cutoff`
+///
+/// If `end_padding` is specified the endpoint is extended accordingly
+pub fn trim_wave<P: AsRef<[f64]>>(wave: P, cutoff: f64, end_padding: Option<usize>) -> Vec<f64> {
+    let wave = wave.as_ref();
 
+    // need to look ahead to find farthest endpoint
     let mut start = 0;
     let mut end = wave.len();
     for (i, sampl) in wave.iter().enumerate() {
@@ -15,37 +17,15 @@ pub fn trim_wave(wave: Vec<f64>, cutoff: f64, end_padding: Option<usize>) -> Vec
         }
     }
 
-    // println!("start: {start} end: {end}");
-
-    // if start - padding > 0 {
-    //     start -= padding;
-    // }
-
     if let Some(padding) = end_padding {
         if end + padding < wave.len() {
             end += padding;
+        } else {
+            end = wave.len() - 1;
         }
     }
 
-    // println!("start: {start} end: {end}");
-
-    let wave: Vec<f64> = wave
-        .into_iter()
-        .enumerate()
-        .filter_map(|(i, v)| {
-            if i >= start && i <= end {
-                return Some(v);
-            }
-
-            None
-        })
-        .collect();
-
-    // let after = wave.len();
-    // let after_percent: f64 = (after as f64 / before as f64) * 100.0;
-
-    // println!("samples: {} {:.2}%", after, after_percent);
-    wave
+    wave[start..=end].to_owned()
 }
 
 #[cfg(test)]
@@ -57,7 +37,7 @@ mod tests {
         let wave: [f64; 10] = [
             0f64, 0_f64, 0_f64, 600_f64, 600_f64, 600_f64, 0_f64, 600_f64, 0_f64, 0f64,
         ];
-        let a = trim_wave(wave.to_vec(), 500_f64, None);
+        let a = trim_wave(wave, 500_f64, None);
 
         assert_eq!(a, [600_f64, 600_f64, 600_f64, 0_f64, 600_f64]);
     }

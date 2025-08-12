@@ -9,8 +9,6 @@ use trim::trim_wave;
 
 pub struct VoiceWave {
     pub wave: Vec<i16>,
-    // Count of samples
-    len: usize,
 
     index: usize,
 }
@@ -23,7 +21,7 @@ impl VoiceWave {
 
     /// Count of the samples
     pub fn sample_length(&self) -> usize {
-        self.len
+        self.wave.len()
     }
 
     /// How many `bytes` in a sample element
@@ -111,7 +109,7 @@ impl VoiceWave {
 impl Iterator for VoiceWave {
     type Item = i16;
     fn next(&mut self) -> Option<<Self as Iterator>::Item> {
-        if self.index < self.len {
+        if self.index < self.sample_length() {
             let item = self.wave[self.index];
 
             self.index += 1;
@@ -135,7 +133,7 @@ impl Source for VoiceWave {
     }
 
     fn current_frame_len(&self) -> Option<usize> {
-        Some(self.len - (self.index + 1))
+        Some(self.sample_length() - (self.index + 1))
     }
 
     fn total_duration(&self) -> Option<Duration> {
@@ -146,14 +144,11 @@ impl Source for VoiceWave {
 #[derive(Default)]
 pub struct VoiceWaveBuilder {
     wave: Vec<f64>,
-
-    len: usize,
 }
 
 impl VoiceWaveBuilder {
     pub fn new(wave: Vec<f64>) -> VoiceWaveBuilder {
-        let len = wave.len();
-        VoiceWaveBuilder { wave, len }
+        VoiceWaveBuilder { wave }
     }
 
     #[allow(dead_code)]
@@ -163,9 +158,7 @@ impl VoiceWaveBuilder {
     }
 
     pub fn trim(mut self, cutoff: f64, end_padding: Option<usize>) -> VoiceWaveBuilder {
-        let wave = trim_wave(self.wave, cutoff, end_padding);
-
-        self.wave = wave;
+        self.wave = trim_wave(self.wave, cutoff, end_padding);
         self
     }
 
@@ -180,11 +173,7 @@ impl VoiceWaveBuilder {
             })
             .collect();
 
-        VoiceWave {
-            wave,
-            len: self.len,
-            index: 0,
-        }
+        VoiceWave { wave, index: 0 }
     }
 }
 
