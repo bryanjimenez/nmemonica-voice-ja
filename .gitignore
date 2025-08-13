@@ -1,8 +1,11 @@
+*.txt
+*.wav
+.*
+!.github
+
 # build output
 target/
 
 # node_modules
 **/node_modules/
-
-*.txt
-*.wav
+tests/package-lock.json

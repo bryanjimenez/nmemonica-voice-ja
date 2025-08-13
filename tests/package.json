@@ -5,7 +5,7 @@
       "bryanjimenez <bryanjimenez6@gmail.com>"
     ],
     "description": "Module Tester",
-    "version": "0.1.0",
+    "version": "0.0.0",
     "files": [
       "wasm_js_play.js",
       "wasm_js_test.js"
@@ -15,7 +15,7 @@
         "test":"mocha -n experimental-wasm-modules ./wasm_js_test.js"
     },
     "devDependencies": {
-        "@nmemonica/voice-ja": "file:../pkg/nmemonica-voice-ja-0.1.0.tgz",
+        "@nmemonica/voice-ja": "file:../pkg/nmemonica-voice-ja-0.1.1.tgz",
         "mocha":"latest"
     }
   }

@@ -65,7 +65,7 @@ All rights reserved.
       - [openjtalk](https://open-jtalk.sourceforge.net/)  
 Copyright (c) 2008-2018  Nagoya Institute of Technology Department of Computer Science  
 All rights reserved.  
-              <details><summary>LICENSE</summary>
+        <details><summary>LICENSE</summary>
 
         ```
         ===============================================================================
@@ -187,8 +187,8 @@ All rights reserved.
         ```
         </details>
       - [jbonsai](https://github.com/jpreprocess/jbonsai)  
-        Copyright (c) 2023 by JPreprocess Team.
-                    <details><summary>LICENSE</summary>
+        Copyright (c) 2023 by JPreprocess Team.  
+        <details><summary>LICENSE</summary>
 
         ```
                 BSD 3-Clause License
@@ -222,8 +222,8 @@ All rights reserved.
         ```
         </details>
       - [jpreprocess](https://github.com/jpreprocess/jpreprocess)  
-        Copyright (c) 2022 by JPreprocess Team.
-                          <details><summary>LICENSE</summary>
+        Copyright (c) 2022 by JPreprocess Team.  
+        <details><summary>LICENSE</summary>
 
         ```
                 BSD 3-Clause License
@@ -260,8 +260,8 @@ All rights reserved.
       - [hts_voice_nitech_jp_atr503_m001-1.05](https://open-jtalk.sourceforge.net)  
         Copyright (c) 2003-2012  Nagoya Institute of Technology Department of Computer Science  
         2003-2008  Tokyo Institute of Technology Interdisciplinary Graduate School of Science and Engineering  
-        Some rights reserved.
-                                <details><summary>LICENSE</summary>
+        Some rights reserved.  
+        <details><summary>LICENSE</summary>
 
         ```
         ===============================================================================
@@ -371,8 +371,8 @@ All rights reserved.
       - [tohoku-f01](https://github.com/icn-lab/htsvoice-tohoku-f01)  
         Copyright(c) 2015 Intelligent Communication Network (Ito-Nose) Laboratory Tohoku University.  
         tohoku-f01 is released by Intelligent Communication Network Laboratory, Tohoku University.  
-        Some rights reserved.
-                                      <details><summary>LICENSE</summary>
+        Some rights reserved.  
+        <details><summary>LICENSE</summary>
 
         ```
         ----------------------------------------------------------------------------------

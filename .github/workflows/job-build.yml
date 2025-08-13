@@ -1,0 +1,34 @@
+name: Build pkg
+on: workflow_call
+
+jobs:
+  build:
+    environment: ci
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: install-wasm-pack
+        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          target: wasm32-unknown-unknown
+
+      - name: build-pkg
+        run: wasm-pack build --scope nmemonica --release
+      - name: pack-pkg
+        run: wasm-pack pack
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pkg
+          path: pkg/
