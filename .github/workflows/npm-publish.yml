@@ -14,4 +14,8 @@ jobs:
 
   publish-npm:
     needs: test-pkg
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
     uses: ./.github/workflows/job-publish.yml
