@@ -18,7 +18,6 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: pkg
-          path: pkg
 
       - name: npm-publish
         run: npm publish --provenance --access public
