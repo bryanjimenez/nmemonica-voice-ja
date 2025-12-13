@@ -19,20 +19,19 @@ jobs:
     permissions:
       contents: read
       packages: write
-      id-token: write
+      id-token: write # Required for OIDC
+      attestations: write # Optional for security provenance
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: 20
           registry-url: 'https://registry.npmjs.org'
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v6
         with:
           name: pkg
-
+      - run: npm install -g npm@latest
       - name: npm-publish
-        run: npm publish --provenance --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --access public
