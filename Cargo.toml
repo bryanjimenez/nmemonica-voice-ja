@@ -3,7 +3,7 @@ name = "voice-ja"
 description = "Japanese voice module for Nmemonica"
 version = "0.1.3"
 authors = ["bryanjimenez <bryanjimenez6@gmail.com>"]
-repository = "https://github.com/bryanjimenez/nmemonica-voice-ja"
+repository = "git+https://github.com/bryanjimenez/nmemonica-voice-ja.git"
 keywords = ["language", "japanese"]
 edition = "2021"
 
