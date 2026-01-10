@@ -1,0 +1,15 @@
+version: 2
+updates:
+
+  # Create Security Alerts
+  - package-ecosystem: "cargo"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "wednesday"
+    allow:
+      - dependency-type: "production"
+    commit-message:
+      prefix: "cargo"
+      include: "scope"
+    open-pull-requests-limit: 0
