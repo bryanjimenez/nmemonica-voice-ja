@@ -3,10 +3,8 @@ use jbonsai::{
     model::{load_htsvoice_from_bytes, VoiceSet},
     Condition, Engine,
 };
-use jpreprocess::{
-    kind::JPreprocessDictionaryKind, JPreprocess, JPreprocessConfig, SystemDictionaryConfig,
-};
-use std::path::PathBuf;
+use jpreprocess::{kind::JPreprocessDictionaryKind, JPreprocess, SystemDictionaryConfig};
+use std::path::Path;
 
 pub fn build_speech(
     text: &str,
@@ -14,17 +12,24 @@ pub fn build_speech(
     dictionary_path: Option<&str>,
     req_condition: Option<Condition>,
 ) -> Result<Vec<f64>, Box<dyn std::error::Error>> {
-    let config = JPreprocessConfig {
-        dictionary: match dictionary_path {
-            Some(dictionary_path) => {
-                jpreprocess::SystemDictionaryConfig::File(PathBuf::from(dictionary_path))
+    let dictionary = match dictionary_path {
+        Some(provided_path) => {
+            match jpreprocess::Dictionary::load_from_path(Path::new(provided_path)) {
+                Ok(d) => d,
+                Err(e) => {
+                    return Err(format!("Failed to load provided {provided_path} {e:?}").into())
+                }
             }
-            None => SystemDictionaryConfig::Bundled(JPreprocessDictionaryKind::NaistJdic),
-        },
-        user_dictionary: None,
+        }
+        None => {
+            match SystemDictionaryConfig::Bundled(JPreprocessDictionaryKind::NaistJdic).load() {
+                Ok(default) => default,
+                Err(e) => return Err(format!("Failed to load default NaistJdic {e:?}").into()),
+            }
+        }
     };
 
-    let jpreprocess = JPreprocess::from_config(config)?;
+    let jpreprocess = JPreprocess::with_dictionaries(dictionary, None);
 
     let fc = jpreprocess.extract_fullcontext(text)?;
 
