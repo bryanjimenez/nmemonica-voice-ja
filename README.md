@@ -1,4 +1,6 @@
 # @nmemonica/voice-ja
+![version](https://img.shields.io/npm/v/@nmemonica/voice-ja)
+
 Japanese voice module for [Nmemonica](https://bryanjimenez.github.io/nmemonica/)
 
 This repository is part of the Nmemonica project.
