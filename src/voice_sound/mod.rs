@@ -1,5 +1,7 @@
 pub mod trim;
 
+use std::num::NonZero;
+
 #[cfg(not(all(target_arch = "wasm32", target_os = "unknown")))]
 use std::time::Duration;
 
@@ -30,14 +32,14 @@ impl VoiceWave {
     }
 
     #[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
-    fn channels(&self) -> u16 {
-        1
+    fn channels(&self) -> NonZero<u16> {
+        NonZero::new(1).expect("Channels was zero")
     }
 
     /// Frequency
     #[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
-    fn sample_rate(&self) -> u32 {
-        48000
+    fn sample_rate(&self) -> NonZero<u32> {
+        NonZero::new(48000).expect("Sample rate was zero")
     }
 
     /// Converts signal into a **wav** file buffer
@@ -52,8 +54,8 @@ impl VoiceWave {
             .expect("Expected sample element byte size to be small");
         let bit_per_sample = 8 * sample_el_size_byte;
 
-        let byte_per_block = self.channels() * sample_el_size_byte;
-        let byte_per_sec = self.sample_rate() * u32::from(byte_per_block);
+        let byte_per_block = self.channels().get() * sample_el_size_byte;
+        let byte_per_sec = self.sample_rate().get() * u32::from(byte_per_block);
 
         let file_type_bloc_id: &[u8; 4] = b"RIFF"; //                   Identifier « RIFF »  (0x52, 0x49, 0x46, 0x46)
         let file_size: &[u8; 4] = &file_size.to_le_bytes(); //          Overall file size minus 8 bytes
@@ -61,8 +63,8 @@ impl VoiceWave {
         let format_bloc_id: &[u8; 4] = b"fmt "; //                      Identifier « fmt␣ »  (0x66, 0x6D, 0x74, 0x20)
         let bloc_size: &[u8; 4] = &16_u32.to_le_bytes(); //             Chunk size minus 8 bytes, which is 16 bytes here  (0x10) b"\x10\x00\x00\x00"
         let audio_format: &[u8; 2] = &1_u16.to_le_bytes(); //           Audio format (1: PCM integer, 3: IEEE 754 float)
-        let nbr_channels: &[u8; 2] = &self.channels().to_le_bytes(); // Number of channels
-        let frequency: &[u8; 4] = &self.sample_rate().to_le_bytes(); // Sample rate (in hertz) (=48000) (x0000bb80) (x80bb0000) b"\x80\xBB\x00\x00"
+        let nbr_channels: &[u8; 2] = &self.channels().get().to_le_bytes(); // Number of channels
+        let frequency: &[u8; 4] = &self.sample_rate().get().to_le_bytes(); // Sample rate (in hertz) (=48000) (x0000bb80) (x80bb0000) b"\x80\xBB\x00\x00"
         let byte_per_sec: &[u8; 4] = &byte_per_sec.to_le_bytes(); //    Number of bytes to read per second (Frequency * BytePerBloc).(96000) (x00017700) (x00770100) b"\x00\x77\x01\x00"
         let byte_per_block: &[u8; 2] = &byte_per_block.to_le_bytes(); //Number of bytes per block (NbrChannels * BitsPerSample / 8). ((1*16)/8)=2 b"\x02\x00"
         let bits_per_sample: &[u8; 2] = &bit_per_sample.to_le_bytes(); //Number of bits per sample (=16) b"\x10\x00"
@@ -124,12 +126,12 @@ impl Iterator for VoiceWave {
 impl Source for VoiceWave {
     // https://docs-rs-web-prod.infra.rust-lang.org/rodio/0.6.0/rodio/source/trait.Source.html
 
-    fn channels(&self) -> u16 {
-        1
+    fn channels(&self) -> NonZero<u16> {
+        NonZero::new(1).expect("Channels was zero")
     }
     /// Frequency
-    fn sample_rate(&self) -> u32 {
-        48000
+    fn sample_rate(&self) -> NonZero<u32> {
+        NonZero::new(48000).expect("Sample rate was zero")
     }
 
     fn current_span_len(&self) -> Option<usize> {
