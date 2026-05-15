@@ -1,4 +1,3 @@
-name: Test pkg
 on: workflow_call
 
 jobs:
