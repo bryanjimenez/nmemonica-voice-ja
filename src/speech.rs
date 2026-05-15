@@ -83,6 +83,7 @@ mod tests {
     use super::*;
 
     #[test]
+    #[cfg_attr(miri, ignore)] // fs read: dictionary + voices
     fn build_speech_fn_default() {
         let query = "テスト";
         let wave = build_speech(query, None, None, None).unwrap();
@@ -91,6 +92,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg_attr(miri, ignore)] // fs read: dictionary + voices
     fn build_speech_fn_neutral() {
         let query = "テスト";
         let wave = build_speech(query, Some(JapaneseVoice::neutral), None, None).unwrap();
