@@ -1,7 +1,7 @@
 [package]
 name = "voice-ja"
 description = "Japanese voice module for Nmemonica"
-version = "0.1.8"
+version = "0.1.9"
 authors = ["bryanjimenez <bryanjimenez6@gmail.com>"]
 repository = "git+https://github.com/bryanjimenez/nmemonica-voice-ja.git"
 keywords = ["language", "japanese"]
@@ -22,8 +22,8 @@ wasm-bindgen = "0.2.92"
 # code size when deploying.
 console_error_panic_hook = { version = "0.1.7", optional = true }
 
-jbonsai = { version = "0.4.1", features = ["htsvoice"] }
-jpreprocess = { version = "0.13.2", features = ["naist-jdic"] }
+jbonsai = { version = "0.4.1", default-features = false, features = ["htsvoice"] }
+jpreprocess = { version = "0.13.2", default-features = false, features = ["naist-jdic"] }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 rodio = { version = "0.22.2" }
