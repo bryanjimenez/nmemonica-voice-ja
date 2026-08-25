@@ -10,6 +10,9 @@ jobs:
         with:
           node-version: 24
           registry-url: 'https://registry.npmjs.org'
+      - uses: actions/download-artifact@v8
+        with:
+          name: pkg
       - run: |
             echo "tag_ref: $GITHUB_REF_NAME"
             pkg_ver=`grep version ./package.json | sed -r -e's/(version)|[",: ]//g' -e 's/^/v/g'`
