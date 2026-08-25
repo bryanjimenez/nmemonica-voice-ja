@@ -6,10 +6,10 @@ on:
 
 jobs:
   simple-tag-check:
+    needs: [build]
     uses: ./.github/workflows/job-tag-ver.yml
 
   build:
-    needs: [simple-tag-check]
     uses: ./.github/workflows/job-build.yml
 
   test-pkg:
@@ -17,7 +17,7 @@ jobs:
     uses: ./.github/workflows/job-test.yml
 
   publish-npm:
-    needs: test-pkg
+    needs: [test-pkg, simple-tag-check]
     environment: ci
     runs-on: ubuntu-latest
     permissions:
