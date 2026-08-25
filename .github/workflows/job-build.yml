@@ -25,15 +25,8 @@ jobs:
       - name: build-pkg
         run: wasm-pack build --scope nmemonica --release
 
-      - name: bundle third party notices
-        run: |
-          echo "THIRD PARTY SOFTWARE NOTICES AND INFORMATION" > ./pkg/ThirdPartyNotice.txt
-          echo "Do Not Translate or Localize" >> ./pkg/ThirdPartyNotice.txt
-          echo "\n--------------------------------------------------------------------------------" >> ./pkg/ThirdPartyNotice.txt
-          echo "htsvoice-tohoku-f01 v8e33060 - 2015 Intelligent Communication Network (Ito-Nose) Laboratory, Tohoku University" >> ./pkg/ThirdPartyNotice.txt
-          echo "https://github.com/icn-lab/htsvoice-tohoku-f01" >> ./pkg/ThirdPartyNotice.txt
-          echo "--------------------------------------------------------------------------------\n" >> ./pkg/ThirdPartyNotice.txt
-          cat ./htsvoice/tohoku-f01/COPYRIGHT.txt >> ./pkg/ThirdPartyNotice.txt
+      - name: package third-party-notice
+        run: node ./pkg_helper.js
 
       - name: pack-pkg
         run: wasm-pack pack
