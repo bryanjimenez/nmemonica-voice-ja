@@ -22,6 +22,11 @@ jobs:
           toolchain: stable
           target: wasm32-unknown-unknown
 
+      - name: install cargo-audit
+        run: |
+          cargo install cargo-audit
+          cargo audit
+
       - name: build-pkg
         run: wasm-pack build --scope nmemonica --release
 
