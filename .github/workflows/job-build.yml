@@ -26,7 +26,7 @@ jobs:
         run: wasm-pack build --scope nmemonica --release
 
       - name: package third-party-notice
-        run: node ./pkg_helper.js
+        run: node ./pkg_helper.js third-party
 
       - name: pack-pkg
         run: wasm-pack pack
