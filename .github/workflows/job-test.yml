@@ -19,6 +19,9 @@ jobs:
           name: pkg
           path: pkg
 
+      - name: current version for test dependency
+        run: node ./pkg_helper.js test-update
+
       - run: npm --prefix ./tests install
 
       - run: npm run --prefix ./tests test
