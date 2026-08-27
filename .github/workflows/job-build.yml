@@ -13,9 +13,6 @@ jobs:
         with:
           node-version: 24
 
-      - name: install-wasm-pack
-        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
-
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
@@ -24,7 +21,7 @@ jobs:
 
       - name: install cargo-audit
         run: |
-          cargo install cargo-audit
+          cargo install cargo-audit cargo-license wasm-pack
           cargo audit
 
       - name: build-pkg
