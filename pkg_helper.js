@@ -6,6 +6,11 @@ const noticeLocation = "./pkg/ThirdPartyNotice.txt";
 const noticeJSONLocation = "./pkg/ThirdPartyNotice.json";
 const testPkgLocation = "./tests/package.json";
 
+const additionalFileToPackage = [
+  "ThirdPartyNotice.txt",
+  "ThirdPartyNotice.json",
+];
+
 function getAllDependencyLicenses() {
   const { status, stdout, stderr } = spawnSync("cargo", [
     "license",
@@ -18,25 +23,40 @@ function getAllDependencyLicenses() {
   }
 
   const all = stdout.toString();
-  const licenses = JSON.parse(all);
+
+  const tohoku_f01 = {
+    name: "htsvoice-tohoku-f01",
+    version: "8e33060",
+    authors:
+      "Intelligent Communication Network (Ito-Nose) Laboratory, Tohoku University",
+    repository: "https://github.com/icn-lab/htsvoice-tohoku-f01",
+    licenseText: fs.readFileSync("./htsvoice/tohoku-f01/COPYRIGHT.txt", {
+      encoding: "utf8",
+    }),
+    license: "CC-BY-4.0",
+  };
+
+  const licenses = [tohoku_f01, ...JSON.parse(all)];
 
   console.table(
-    licenses.map((l) => ({
-      name: l.name,
-      version: l.version,
-      license: l.license,
-      authors: l.authors,
-    })),
+    licenses
+      .sort((a, b) => a.name.charCodeAt(0) - b.name.charCodeAt(0))
+      .map((l) => ({
+        name: l.name,
+        version: l.version,
+        license: l.license,
+        authors: l.authors,
+      })),
   );
   return licenses;
 }
 
 function packageAdditionalFiles() {
-  const files = ["ThirdPartyNotice.txt", "ThirdPartyNotice.json"];
-
   const pkg = fs.readFileSync(manifestLocation, { encoding: "utf8" });
   const manifest = JSON.parse(pkg);
-  manifest.files = Array.from(new Set([...manifest.files, ...files]));
+  manifest.files = Array.from(
+    new Set([...manifest.files, ...additionalFileToPackage]),
+  );
 
   console.table(
     manifest.files.reduce(
@@ -66,20 +86,9 @@ function aggregateThirdPartyNotice() {
 
   const s =
     "================================================================================\n";
-  const tohoku_f01 = {
-    name: "htsvoice-tohoku-f01",
-    version: "v8e33060",
-    authors:
-      "Intelligent Communication Network (Ito-Nose) Laboratory, Tohoku University",
-    repository: "https://github.com/icn-lab/htsvoice-tohoku-f01",
-    licenseText: fs.readFileSync("./htsvoice/tohoku-f01/COPYRIGHT.txt", {
-      encoding: "utf8",
-    }),
-    license: "CC-BY-4.0",
-  };
 
   const pkgDeps = getAllDependencyLicenses();
-  const dependencies = [tohoku_f01, ...pkgDeps].reduce((acc, dep) => {
+  const dependencies = pkgDeps.reduce((acc, dep) => {
     const { name, authors } = dep;
 
     if (manifest.name.endsWith(name) && manifest.collaborators[0] === authors) {
