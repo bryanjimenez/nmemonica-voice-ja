@@ -2,7 +2,7 @@ version: 2
 updates:
 
   # Create Security Alerts
-  - package-ecosystem: "cargo"
+  - package-ecosystem: ["cargo", "github-actions"]
     directory: "/"
     schedule:
       interval: "weekly"
