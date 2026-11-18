@@ -1,3 +1,4 @@
+import { describe, it } from 'node:test';
 import assert from "assert";
 import { buildSpeech } from "@nmemonica/voice-ja";
 
