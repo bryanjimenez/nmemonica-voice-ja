@@ -23,4 +23,4 @@ jobs:
 
       - run: npm --prefix ./tests install
 
-      - run: npm run --prefix ./tests test
+      - run: npm --prefix ./tests run test
